@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ADMIN PANEL - PREDICT PRO</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--blue:#2563eb;--blue-dark:#1d4ed8;--navy:#0f172a;--text:#f1f5f9;--text-mid:#94a3b8;--bg:#0a0f1a;--card:#111827;--border:#1e293b;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--r:14px}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.hidden{display:none!important}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:10px 18px;border-radius:12px;font-size:12px;z-index:1000;animation:tIn .3s ease}
+@keyframes tIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+.login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--navy);z-index:1000}
+.lbox{width:360px;background:rgba(30,41,59,.95);backdrop-filter:blur(20px);border:1px solid rgba(37,99,235,.3);padding:32px;border-radius:24px}
+.l-logo{width:50px;height:50px;background:linear-gradient(135deg,#2563eb,#60a5fa);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px}
+.lbox h2{font-size:22px;margin-bottom:4px}.l-sub{font-size:11px;color:var(--text-mid);margin-bottom:24px}
+.inp-g{margin-bottom:14px}.inp-g label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-mid)}
+.inp-g input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);color:#fff;padding:11px 14px;border-radius:10px;font-family:'JetBrains Mono',monospace;outline:none}
+.inp-g input:focus{border-color:#2563eb}
+.l-btn{width:100%;padding:12px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:0;color:#fff;border-radius:10px;font-weight:800;cursor:pointer}
+.l-st{font-size:11px;text-align:center;margin-top:12px;color:var(--red)}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;background:var(--navy);z-index:100;transition:transform .3s;overflow-y:auto}
+.sb-top{padding:20px;border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:10px}.b-icon{width:36px;height:36px;background:linear-gradient(135deg,#2563eb,#60a5fa);border-radius:10px;display:flex;align-items:center;justify-content:center}.b-name{font-weight:800;font-size:16px}
+.nav{padding:12px}.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;cursor:pointer;color:var(--text-mid);font-size:13px;font-weight:600;margin-bottom:2px}
+.nav-item:hover,.nav-item.active{background:rgba(37,99,235,.2);color:#fff}.nav-item.active{background:linear-gradient(135deg,rgba(37,99,235,.3),rgba(37,99,235,.1));border-left:3px solid var(--blue)}
+.sb-bottom{padding:16px;border-top:1px solid var(--border);margin-top:20px}
+.adm{display:flex;align-items:center;gap:10px}.adm-av{width:38px;height:38px;background:linear-gradient(135deg,#2563eb,#60a5fa);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800}.lo-btn{background:none;border:none;color:var(--text-mid);cursor:pointer;margin-left:auto;font-size:18px}
+.main{margin-left:260px;padding:20px;min-height:100vh}
+.hbg{display:none;position:fixed;top:14px;left:14px;width:40px;height:40px;background:var(--navy);border:1px solid var(--border);border-radius:10px;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;z-index:200}
+.bar{width:18px;height:2px;background:#fff;border-radius:2px}
+.sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.pt{font-size:22px;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.sc{background:var(--card);border-radius:var(--r);padding:14px 16px;border-left:3px solid var(--blue);display:flex;align-items:center;gap:12px}
+.sv{font-size:24px;font-weight:800;font-family:'JetBrains Mono',monospace}.sl{font-size:10px;color:var(--text-mid)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.card{background:var(--card);border-radius:var(--r);padding:16px;border:1px solid var(--border);transition:.2s}
+.card:hover{border-color:rgba(37,99,235,.3)}
+.u-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.u-av{width:40px;height:40px;background:linear-gradient(135deg,#2563eb,#60a5fa);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800}
+.u-info{flex:1;min-width:0}.u-em{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{font-size:9px;padding:2px 8px;border-radius:99px}.badge.ok{background:rgba(34,197,94,.2);color:var(--green)}.badge.ban{background:rgba(239,68,68,.2);color:var(--red)}.badge.pend{background:rgba(245,158,11,.2);color:var(--yellow)}
+.m-row{display:flex;justify-content:space-between;margin:8px 0;font-size:12px}
+.ca{display:flex;gap:8px;margin-top:12px}
+.btn{padding:7px 14px;border-radius:8px;border:0;font-weight:600;font-size:11px;cursor:pointer;transition:.2s}
+.btn-p{background:var(--blue);color:#fff}.btn-d{background:rgba(239,68,68,.2);color:var(--red)}.btn-s{background:rgba(34,197,94,.2);color:var(--green)}.btn-g{background:rgba(255,255,255,.05);color:var(--text-mid)}
+.kv{font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(0,0,0,.3);padding:8px;border-radius:8px;margin:8px 0;cursor:pointer;word-break:break-all}
+.fr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.fg label{font-size:9px;font-weight:700;color:var(--text-mid);display:block;margin-bottom:4px}
+.fg input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);color:#fff;padding:8px 10px;border-radius:8px}
+.notice-item{background:rgba(245,197,24,.1);border-left:3px solid var(--yellow);padding:10px 12px;border-radius:8px;margin-bottom:8px;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sb-ov.open{display:block}.hbg{display:flex}.main{margin-left:0;padding:60px 12px 20px}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="toast-container"></div>
+<div id="sb-ov" class="sb-ov" onclick="closeSidebar()"></div>
+<div class="hbg" onclick="toggleSidebar()"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+
+<div id="login" class="login">
+  <div class="lbox">
+    <div class="l-logo">⚡</div>
+    <h2>ADMIN PANEL</h2>
+    <div class="l-sub">SUPER ADMIN ACCESS</div>
+    <div class="inp-g"><label>EMAIL</label><input id="em" type="email" placeholder="admin@domain.com"></div>
+    <div class="inp-g"><label>PASSWORD</label><input id="pw" type="password" placeholder="••••••"></div>
+    <button class="l-btn" onclick="doLogin()">ĐĂNG NHẬP →</button>
+    <div id="st" class="l-st"></div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <div id="sidebar" class="sidebar">
+    <div class="sb-top"><div class="brand"><div class="b-icon">⚡</div><div><div class="b-name">ADMIN PANEL</div><div style="font-size:9px;color:#64748b">v3.0</div></div></div></div>
+    <div class="nav">
+      <div class="nav-item active" data-tab="users" onclick="tab('users')"><span>👥</span><span>Users</span></div>
+      <div class="nav-item" data-tab="bank" onclick="tab('bank')"><span>🏦</span><span>Bank</span></div>
+      <div class="nav-item" data-tab="keys" onclick="tab('keys')"><span>🔑</span><span>Keys</span></div>
+      <div class="nav-item" data-tab="create" onclick="tab('create')"><span>✨</span><span>Create</span></div>
+      <div class="nav-item" data-tab="games" onclick="tab('games')"><span>🎮</span><span>Games</span></div>
+      <div class="nav-item" data-tab="notice" onclick="tab('notice')"><span>📢</span><span>Notice</span></div>
+      <div class="nav-item" data-tab="settings" onclick="tab('settings')"><span>⚙️</span><span>Settings</span></div>
+      <div class="nav-item" data-tab="logs" onclick="tab('logs')"><span>📋</span><span>Logs</span></div>
+    </div>
+    <div class="sb-bottom"><div class="adm"><div class="adm-av" id="adm-av">A</div><div style="flex:1"><div class="adm-name" id="adm-name">Admin</div><div style="font-size:9px;color:#64748b">SUPER ADMIN</div></div><button class="lo-btn" onclick="doLogout()">⏻</button></div></div>
+  </div>
+
+  <div class="main">
+    <div id="users" class="section"><div class="ph"><div class="pt">👥 Users</div></div><div class="stats"><div class="sc"><div>👥</div><div><div class="sv" id="s-total">0</div><div class="sl">Tổng</div></div></div><div class="sc"><div>✅</div><div><div class="sv" id="s-active">0</div><div class="sl">Active</div></div></div><div class="sc"><div>🚫</div><div><div class="sv" id="s-ban">0</div><div class="sl">Banned</div></div></div><div class="sc"><div>💰</div><div><div class="sv" id="s-money">0</div><div class="sl">Tổng tiền</div></div></div></div><div class="grid" id="user-list"></div></div>
+    <div id="bank" class="section hidden"><div class="ph"><div class="pt">🏦 Bank</div></div><div class="grid" id="bank-list"></div></div>
+    <div id="keys" class="section hidden"><div class="ph"><div class="pt">🔑 Keys</div><button class="btn btn-p" onclick="showCreateKeyModal()">+ Tạo Key</button></div><div class="grid" id="key-list"></div></div>
+    <div id="create" class="section hidden"><div class="ph"><div class="pt">✨ Create / Auto Collection</div></div><div class="grid"><div class="card"><div style="font-weight:800;margin-bottom:12px">📦 Tạo Collection</div><button class="btn btn-p" style="width:100%;margin-bottom:8px" onclick="createCollection('users')">Tạo Users</button><button class="btn btn-p" style="width:100%;margin-bottom:8px" onclick="createCollection('keys')">Tạo Keys</button><button class="btn btn-p" style="width:100%;margin-bottom:8px" onclick="createCollection('bank')">Tạo Bank</button><button class="btn btn-p" style="width:100%;margin-bottom:8px" onclick="createCollection('logs')">Tạo Logs</button><button class="btn btn-p" style="width:100%" onclick="createCollection('notices')">Tạo Notices</button></div><div class="card"><div style="font-weight:800;margin-bottom:12px">🎮 Thêm Game</div><input id="new-game-id" placeholder="Game ID (taixiu)" class="fg" style="width:100%;margin-bottom:8px;padding:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:#fff"><input id="new-game-name" placeholder="Tên hiển thị" class="fg" style="width:100%;margin-bottom:8px;padding:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:#fff"><input id="new-game-icon" placeholder="Icon (🎲)" class="fg" style="width:100%;margin-bottom:8px;padding:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:#fff"><button class="btn btn-p" style="width:100%" onclick="addGame()">➕ Thêm Game</button></div></div></div>
+    <div id="games" class="section hidden"><div class="ph"><div class="pt">🎮 Quản lý Game</div></div><div class="grid" id="games-list"></div></div>
+    <div id="notice" class="section hidden"><div class="ph"><div class="pt">📢 Thông báo</div><button class="btn btn-p" onclick="showAddNoticeModal()">+ Thêm</button></div><div id="notice-list"></div></div>
+    <div id="settings" class="section hidden"><div class="ph"><div class="pt">⚙️ Cài đặt</div></div><div class="card"><div style="font-weight:800;margin-bottom:12px">🏦 Thông tin ngân hàng</div><input id="bank-account" placeholder="Số tài khoản" class="fg" style="width:100%;margin-bottom:8px;padding:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:#fff"><input id="bank-name" placeholder="Ngân hàng" class="fg" style="width:100%;margin-bottom:8px;padding:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:#fff"><input id="bank-holder" placeholder="Chủ tài khoản" class="fg" style="width:100%;margin-bottom:8px;padding:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:#fff"><button class="btn btn-p" style="width:100%" onclick="saveBankSettings()">💾 Lưu</button></div><div class="card" style="margin-top:12px"><div style="font-weight:800;margin-bottom:12px">🔧 Gachthe1s API</div><input id="partner-id" placeholder="PARTNER_ID" class="fg" style="width:100%;margin-bottom:8px;padding:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:#fff"><input id="partner-key" placeholder="PARTNER_KEY" class="fg" style="width:100%;margin-bottom:8px;padding:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:#fff"><input id="api-url" placeholder="API_URL" class="fg" style="width:100%;margin-bottom:8px;padding:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:#fff"><button class="btn btn-p" style="width:100%" onclick="saveCardAPI()">💾 Lưu</button></div></div>
+    <div id="logs" class="section hidden"><div class="ph"><div class="pt">📋 Logs</div><button class="btn btn-d" onclick="clearLogs()">🗑 Xoá</button></div><div id="log-list"></div></div>
+  </div>
+</div>
+
+<script>
+firebase.initializeApp({apiKey:"AIzaSyB2k7_jBc-ZIIO8sIXFhUW3uaIZo_AxKjE",authDomain:"hadesfrvlevi.firebaseapp.com",projectId:"hadesfrvlevi",storageBucket:"hadesfrvlevi.firebasestorage.app",messagingSenderId:"181030582035",appId:"1:181030582035:web:e5b66845a2d9e5cf424ce6"});
+const auth = firebase.auth(), db = firebase.firestore();
+const ADMINS = ["tM2zTIBMNiMI0igljTqBxq43VW12"];
+let currentUser = null;
+
+function toast(msg,type='i'){const el=document.createElement('div');el.className='toast';el.textContent=msg;document.getElementById('toast-container').appendChild(el);setTimeout(()=>el.remove(),2500);}
+async function doLogin(){
+  const em=document.getElementById('em').value.trim(), pw=document.getElementById('pw').value, st=document.getElementById('st');
+  if(!em||!pw){st.textContent='❌ Nhập đầy đủ';return;}
+  st.style.color='#94a3b8';st.textContent='⏳ Đang đăng nhập...';
+  try{
+    const r=await auth.signInWithEmailAndPassword(em,pw);
+    if(!ADMINS.includes(r.user.uid)){st.textContent='🚫 ACCESS DENIED';await auth.signOut();return;}
+    showApp(r.user);
+  }catch(e){st.style.color='#ef4444';st.textContent='❌ '+e.message;}
+}
+function showApp(u){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('adm-av').textContent=(u.email||'A')[0].toUpperCase();
+  document.getElementById('adm-name').textContent=u.email||'Admin';
+  currentUser=u;
+  tab('users');
+  initAutoCreate();
+}
+async function doLogout(){await auth.signOut();location.reload();}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sb-ov').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-ov').classList.remove('open');}
+function tab(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelector(`.nav-item[data-tab="${id}"]`).classList.add('active');
+  if(id==='bank') loadBank(); if(id==='keys') loadKeys(); if(id==='games') loadGames(); if(id==='notice') loadNotices(); if(id==='logs') loadLogs(); if(id==='settings') loadSettings();
+  closeSidebar();
+}
+async function initAutoCreate(){
+  const cols=['users','keys','bank','logs','notices','games','settings'];
+  for(let c of cols){
+    try{
+      const snap=await db.collection(c).limit(1).get();
+      if(snap.empty && c!=='settings'){await db.collection(c).doc('_init').set({init:Date.now()});toast(`✅ Created collection: ${c}`,'s');}
+    }catch(e){console.error(e);}
+  }
+  await loadUsers();
+}
+async function createCollection(name){
+  try{await db.collection(name).doc('_init').set({init:Date.now()});toast(`✅ Created ${name}`,'s');}catch(e){toast('Lỗi: '+e.message,'d');}
+}
+async function loadUsers(){
+  db.collection('users').onSnapshot(snap=>{
+    let total=0, banned=0, totalMoney=0, html='';
+    snap.forEach(d=>{total++; const x=d.data(); if(x.ban)banned++; totalMoney+=x.money||0;});
+    document.getElementById('s-total').textContent=total;
+    document.getElementById('s-active').textContent=total-banned;
+    document.getElementById('s-ban').textContent=banned;
+    document.getElementById('s-money').textContent=totalMoney.toLocaleString();
+    const users=[]; snap.forEach(d=>users.push({id:d.id,...d.data()}));
+    users.forEach((x,i)=>{
+      html+=`<div class="card"><div class="u-hd"><div class="u-av">${(x.email||'?')[0].toUpperCase()}</div><div class="u-info"><div class="u-em">${x.email||'unknown'}</div><div class="u-id">${x.id.slice(0,12)}…</div></div><span class="badge ${x.ban?'ban':'ok'}">${x.ban?'BANNED':'ACTIVE'}</span></div><div class="m-row"><span>💰 Số dư</span><span>${(x.money||0).toLocaleString()}đ</span></div><div class="m-row"><span>🎮 Gói</span><span>${x.sub?.type||'free'}</span></div><div class="ca"><button class="btn btn-p" onclick="addMoney('${x.id}','${x.email}')">💰 Nạp</button>${x.ban?`<button class="btn btn-s" onclick="unban('${x.id}')">✅ Unban</button>`:`<button class="btn btn-d" onclick="doBan('${x.id}')">🚫 Ban</button>`}</div></div>`;
+    });
+    document.getElementById('user-list').innerHTML=html||'<div class="card">Chưa có user</div>';
+  });
+}
+async function addMoney(id,email){
+  const amt=prompt('💰 Số tiền nạp (VNĐ):'); if(!amt)return;
+  await db.collection('users').doc(id).update({money:firebase.firestore.FieldValue.increment(parseInt(amt))});
+  await db.collection('logs').add({text:`Admin nạp ${parseInt(amt).toLocaleString()}đ cho ${email}`,time:Date.now()});
+  toast(`Đã nạp ${parseInt(amt).toLocaleString()}đ`,'s');
+}
+async function doBan(id){if(confirm('Ban user này?')){await db.collection('users').doc(id).update({ban:true});toast('Đã ban','d');}}
+async function unban(id){await db.collection('users').doc(id).update({ban:false});toast('Đã unban','s');}
+async function loadBank(){
+  const snap=await db.collection('bank').orderBy('time','desc').get();
+  let html='';
+  snap.forEach(d=>{const x=d.data();html+=`<div class="card"><div class="u-hd"><div class="u-av">💰</div><div class="u-info"><div class="u-em">${x.user||'Unknown'}</div><div class="u-id">${new Date(x.time).toLocaleString()}</div></div><span class="badge ${x.status==='ok'?'ok':x.status==='rejected'?'ban':'pend'}">${x.status||'pending'}</span></div><div class="m-row"><span>💰 Số tiền</span><span class="sv" style="font-size:18px">${(x.amount||0).toLocaleString()}đ</span></div>${x.note?`<div class="m-row"><span>📝 Note</span><span>${x.note}</span></div>`:''}<div class="ca">${(!x.status||x.status==='pending')?`<button class="btn btn-s" onclick="approveBank('${d.id}')">✅ Duyệt</button><button class="btn btn-d" onclick="rejectBank('${d.id}')">❌ Từ chối</button>`:'<button class="btn btn-g" disabled>Đã xử lý</button>'}</div></div>`;});
+  document.getElementById('bank-list').innerHTML=html||'<div class="card">Chưa có giao dịch</div>';
+}
+async function approveBank(id){await db.collection('bank').doc(id).update({status:'ok',processedAt:Date.now()});toast('Đã duyệt','s');loadBank();}
+async function rejectBank(id){await db.collection('bank').doc(id).update({status:'rejected',processedAt:Date.now()});toast('Đã từ chối','w');loadBank();}
+async function loadKeys(){
+  const snap=await db.collection('keys').get();
+  let html='';
+  snap.forEach(d=>{const x=d.data();html+=`<div class="card"><div class="kv" onclick="copyKey('${d.id}')">🔑 ${d.id}</div><div class="m-row"><span>📅 Days</span><span>${x.days||'∞'}</span></div><div class="m-row"><span>⚡ Limit</span><span>${x.limit||'∞'}</span></div><div class="m-row"><span>📦 Status</span><span class="badge ${x.used?'ban':'ok'}">${x.used?'Đã dùng':'Còn'}</span></div><div class="ca"><button class="btn btn-g" onclick="copyKey('${d.id}')">📋 Copy</button><button class="btn btn-d" onclick="deleteKey('${d.id}')">🗑 Xoá</button></div></div>`;});
+  document.getElementById('key-list').innerHTML=html||'<div class="card">Chưa có key</div>';
+}
+function showCreateKeyModal(){
+  const days=prompt('📅 Số ngày sử dụng (số):','30');
+  const limit=prompt('⚡ Limit (số lần dự đoán):','100');
+  if(days&&limit){
+    db.collection('keys').doc().set({days:parseInt(days),limit:parseInt(limit),used:false,time:Date.now()});
+    toast('Đã tạo key','s');loadKeys();
+  }
+}
+function copyKey(k){navigator.clipboard.writeText(k);toast('Đã copy','s');}
+async function deleteKey(id){if(confirm('Xoá key?')){await db.collection('keys').doc(id).delete();toast('Đã xoá','w');loadKeys();}}
+async function loadGames(){
+  const snap=await db.collection('games').get();
+  let html='';
+  if(snap.empty)html='<div class="card">Chưa có game. Vào tab Create để thêm</div>';
+  snap.forEach(d=>{const x=d.data();html+=`<div class="card"><div style="font-size:24px;margin-bottom:8px">${x.icon||'🎲'}</div><div style="font-weight:800">${x.name}</div><div class="m-row"><span>ID</span><span>${x.id}</span></div><div class="ca"><button class="btn ${x.active?'btn-d':'btn-s'}" onclick="toggleGame('${d.id}',${!x.active})">${x.active?'🔴 Tắt':'🟢 Bật'}</button><button class="btn btn-d" onclick="deleteGame('${d.id}')">🗑 Xoá</button></div></div>`;});
+  document.getElementById('games-list').innerHTML=html;
+}
+async function toggleGame(id,active){await db.collection('games').doc(id).update({active});toast(active?'Đã bật game':'Đã tắt game','s');loadGames();}
+async function deleteGame(id){if(confirm('Xoá game?')){await db.collection('games').doc(id).delete();toast('Đã xoá','w');loadGames();}}
+async function addGame(){
+  const id=document.getElementById('new-game-id').value.trim();
+  const name=document.getElementById('new-game-name').value.trim();
+  const icon=document.getElementById('new-game-icon').value.trim();
+  if(!id||!name){toast('Nhập đầy đủ','w');return;}
+  await db.collection('games').doc(id).set({id,name,icon:icon||'🎲',active:true,createdAt:Date.now()});
+  toast(`Đã thêm game ${name}`,'s');
+  document.getElementById('new-game-id').value='';
+  document.getElementById('new-game-name').value='';
+  document.getElementById('new-game-icon').value='';
+  loadGames();
+}
+async function loadNotices(){
+  const snap=await db.collection('notices').orderBy('time','desc').get();
+  let html='';
+  snap.forEach(d=>{const x=d.data();html+=`<div class="notice-item"><span>📢 ${x.content}</span><button class="btn btn-d" style="padding:4px 8px" onclick="deleteNotice('${d.id}')">🗑</button></div>`;});
+  document.getElementById('notice-list').innerHTML=html||'<div class="card">Chưa có thông báo</div>';
+}
+function showAddNoticeModal(){
+  const content=prompt('📢 Nội dung thông báo:');
+  if(content){db.collection('notices').add({content,time:Date.now()});toast('Đã thêm','s');loadNotices();}
+}
+async function deleteNotice(id){await db.collection('notices').doc(id).delete();toast('Đã xoá','w');loadNotices();}
+async function loadSettings(){
+  const doc=await db.collection('settings').doc('bank').get();
+  if(doc.exists){const d=doc.data();document.getElementById('bank-account').value=d.account||'';document.getElementById('bank-name').value=d.bank||'';document.getElementById('bank-holder').value=d.name||'';}
+  const cardDoc=await db.collection('settings').doc('cardapi').get();
+  if(cardDoc.exists){const cd=cardDoc.data();document.getElementById('partner-id').value=cd.partner_id||'';document.getElementById('partner-key').value=cd.partner_key||'';document.getElementById('api-url').value=cd.api_url||'';}
+}
+async function saveBankSettings(){
+  await db.collection('settings').doc('bank').set({account:document.getElementById('bank-account').value,bank:document.getElementById('bank-name').value,name:document.getElementById('bank-holder').value,updated:Date.now()});
+  toast('Đã lưu ngân hàng','s');
+}
+async function saveCardAPI(){
+  await db.collection('settings').doc('cardapi').set({partner_id:document.getElementById('partner-id').value,partner_key:document.getElementById('partner-key').value,api_url:document.getElementById('api-url').value,updated:Date.now()});
+  toast('Đã lưu API thẻ','s');
+}
+async function loadLogs(){
+  const snap=await db.collection('logs').orderBy('time','desc').limit(100).get();
+  let html='';
+  snap.forEach(d=>{const x=d.data();html+=`<div class="card" style="margin-bottom:8px"><div class="m-row"><span>📝 ${x.text}</span><span style="font-size:10px">${new Date(x.time).toLocaleString()}</span></div></div>`;});
+  document.getElementById('log-list').innerHTML=html||'<div class="card">Chưa có log</div>';
+}
+async function clearLogs(){if(confirm('Xoá toàn bộ logs?')){const snap=await db.collection('logs').get();snap.forEach(async d=>await db.collection('logs').doc(d.id).delete());toast('Đã xoá logs','w');loadLogs();}}
+auth.onAuthStateChanged(u=>{if(u&&ADMINS.includes(u.uid)&&document.getElementById('app').classList.contains('hidden'))showApp(u);});
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+</script>
+</body>
+</html>
